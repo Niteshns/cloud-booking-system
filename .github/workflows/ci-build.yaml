@@ -47,19 +47,20 @@ jobs:
           docker push $ECR_REGISTRY/booking-service:latest
         
         # Build and push the node microservices
-      - name: Build and Push Node Microservices
+      - name: Build and Push Microservices
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          cd payment-services-nodejs
-          
-          docker build -t $ECR_REGISTRY/seat-service:latest
+          cd seat-service-nodejs
+          docker build -t $ECR_REGISTRY/seat-service:latest .
           docker push $ECR_REGISTRY/seat-service:latest
-          
-          cd ../payment-services-nodejs
-          docker build -t $ECR_REGISTRY/payment-service:latest
+          cd ..
+
+          cd payment-service-nodejs
+          docker build -t $ECR_REGISTRY/payment-service:latest .
           docker push $ECR_REGISTRY/payment-service:latest
-          
-          cd ../ticket-service-nodejs
-          docker build -t $ECR_REGISTRY/ticket-service:latest
+          cd ..
+
+          cd ticket-service-nodejs
+          docker build -t $ECR_REGISTRY/ticket-service:latest .
           docker push $ECR_REGISTRY/ticket-service:latest
