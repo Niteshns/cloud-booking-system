@@ -1,0 +1,16 @@
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:eu-west-3:937792903323:repository/booking-service",
+        "registryId": "937792903323",
+        "repositoryName": "booking-service",
+        "repositoryUri": "937792903323.dkr.ecr.eu-west-3.amazonaws.com/booking-service",
+        "createdAt": "2026-02-25T00:36:04.785000+01:00",
+        "imageTagMutability": "MUTABLE",
+        "imageScanningConfiguration": {
+            "scanOnPush": false
+        },
+        "encryptionConfiguration": {
+            "encryptionType": "AES256"
+        }
+    }
+}

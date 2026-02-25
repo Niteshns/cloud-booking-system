@@ -1,0 +1,65 @@
+name: Build and Push
+
+# Builds and pushes anytime code is pushed or merged to main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+
+    # Grab the code from repository and set up Java
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+        
+        # Login to AWS
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+        
+        # Login to ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+        # Build and push the booking service
+      - name: Build and Push Java Booking Service
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          cd booking-service-java
+          # Compile the fresh code first!
+          mvn clean package -DskipTests
+          # Build and push the image
+          docker build -t $ECR_REGISTRY/booking-service:latest .
+          docker push $ECR_REGISTRY/booking-service:latest
+        
+        # Build and push the node microservices
+      - name: Build and Push Node Microservices
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          cd payment-services-nodejs
+          
+          docker build -t $ECR_REGISTRY/seat-service:latest
+          docker push $ECR_REGISTRY/seat-service:latest
+          
+          cd ../payment-services-nodejs
+          docker build -t $ECR_REGISTRY/payment-service:latest
+          docker push $ECR_REGISTRY/payment-service:latest
+          
+          cd ../ticket-service-nodejs
+          docker build -t $ECR_REGISTRY/ticket-service:latest
+          docker push $ECR_REGISTRY/ticket-service:latest
