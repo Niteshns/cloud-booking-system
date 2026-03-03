@@ -10,6 +10,7 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "mysql2": "^3.18.2",
     "zeebe-node": "2.4.0"
   },
   "devDependencies": {
