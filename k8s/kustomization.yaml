@@ -8,7 +8,10 @@ resources:
   - booking-hpa.yaml
   - seat-deployment.yaml
   - seat-service.yaml
+  - seat-hpa.yaml
   - payment-deployment.yaml
   - payment-service.yaml
+  - payment-hpa.yaml
   - ticket-deployment.yaml
   - ticket-service.yaml
+  - ticket-hpa.yaml
