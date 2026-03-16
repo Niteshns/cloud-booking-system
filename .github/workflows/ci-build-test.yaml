@@ -1,4 +1,4 @@
-name: [TEST]
+name: TEST
 
 # Builds and pushes anytime code is pushed or merged to main
 on:
