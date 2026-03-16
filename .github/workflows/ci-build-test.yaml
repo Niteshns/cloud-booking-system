@@ -1,4 +1,4 @@
-name: Build and Push
+name: [TEST]
 
 # Builds and pushes anytime code is pushed or merged to main
 on:
@@ -33,37 +33,6 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
-        # Build and push the booking service
-      - name: Build and Push Java Booking Service
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          cd booking-service-java
-          # Compile the fresh code first!
-          mvn clean package -DskipTests
-          # Build and push the image
-          docker build -t $ECR_REGISTRY/booking-service:latest .
-          docker push $ECR_REGISTRY/booking-service:latest
-        
-        # Build and push the node microservices
-      - name: Build and Push Microservices
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          cd seat-service-nodejs
-          docker build -t $ECR_REGISTRY/seat-service:latest .
-          docker push $ECR_REGISTRY/seat-service:latest
-          cd ..
-
-          cd payment-service-nodejs
-          docker build -t $ECR_REGISTRY/payment-service:latest .
-          docker push $ECR_REGISTRY/payment-service:latest
-          cd ..
-
-          cd ticket-service-nodejs
-          docker build -t $ECR_REGISTRY/ticket-service:latest .
-          docker push $ECR_REGISTRY/ticket-service:latest
       
         # Update the new code changes by applying it on the kubernetes  
       - name: Update kubeconfig for EKS
@@ -71,6 +40,12 @@ jobs:
           aws eks update-kubeconfig \
             --region eu-west-3 \
             --name ticketing-cluster
+
+      - name: Debug EKS auth
+        run: |
+          aws sts get-caller-identity
+          kubectl config current-context
+          kubectl get nodes
 
       - name: Deploy to Kubernetes
         run: |
