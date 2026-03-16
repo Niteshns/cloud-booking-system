@@ -64,3 +64,15 @@ jobs:
           cd ticket-service-nodejs
           docker build -t $ECR_REGISTRY/ticket-service:latest .
           docker push $ECR_REGISTRY/ticket-service:latest
+
+
+        # Update the new code changes by applying it on the kubernetes  
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --region eu-west-3 \
+            --name ticketing-cluster
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -k k8s/
