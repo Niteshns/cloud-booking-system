@@ -19,7 +19,7 @@ app.get("/ticket", async (_req, res) => {
 
   const userId = 67;
   const eventId = 444;
-  const eventTag = "devopsIsFUN";
+  const eventTag = "pre-final-presentation";
 
   let connection;
   try {
