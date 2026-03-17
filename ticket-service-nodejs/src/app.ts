@@ -17,9 +17,9 @@ app.get("/ticket", async (_req, res) => {
   const ticketId = uuidv4();
   console.log("\n\n [x] Create Ticket %s", ticketId);
 
-  const userId = 67;
-  const eventId = 444;
-  const eventTag = "pre-final-presentation";
+  const userId = 42;
+  const eventId = 364;
+  const eventTag = "final-presentation";
 
   let connection;
   try {

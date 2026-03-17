@@ -44,7 +44,7 @@ zeebeClient.createWorker("reserve-seats", async (job) => {
         (event_id, venue_id, seat_id, user_id, status)
         VALUES (?, ?, ?, ?, ?)
       `,
-      [1, 1, 105, 312, "reserved"]
+      [2, 4, 32, 412, "reserved"]
     );
 
     console.log("✅ Seat inserted");
