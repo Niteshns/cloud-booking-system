@@ -75,7 +75,6 @@ jobs:
           docker push $ECR_REGISTRY/ticket-service:$IMAGE_TAG
           docker push $ECR_REGISTRY/ticket-service:latest
 
-
         # Update the new code changes by applying it on the kubernetes  
       - name: Update kubeconfig for EKS
         run: |
@@ -83,6 +82,14 @@ jobs:
             --region eu-west-3 \
             --name ticketing-cluster
 
+        # Apply K8s manifests (HPAs, services, configmaps, etc.)
+      - name: Apply Kubernetes Manifests
+        env:
+          K8S_NAMESPACE: ticketing
+        run: |
+          kubectl apply -f k8s/ -n $K8S_NAMESPACE --recursive
+
+        # Deploy the new images to EKS
       - name: Deploy Latest Images To EKS
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -94,7 +101,7 @@ jobs:
           kubectl -n $K8S_NAMESPACE set image deployment/payment-service payment-service=$ECR_REGISTRY/payment-service:$IMAGE_TAG
           kubectl -n $K8S_NAMESPACE set image deployment/ticket-service ticket-service=$ECR_REGISTRY/ticket-service:$IMAGE_TAG
 
-          kubectl -n $K8S_NAMESPACE rollout status deployment/booking-service --timeout=180s
-          kubectl -n $K8S_NAMESPACE rollout status deployment/seat-service --timeout=180s
-          kubectl -n $K8S_NAMESPACE rollout status deployment/payment-service --timeout=180s
-          kubectl -n $K8S_NAMESPACE rollout status deployment/ticket-service --timeout=180s
+          kubectl -n $K8S_NAMESPACE rollout status deployment/booking-service --timeout=300s
+          kubectl -n $K8S_NAMESPACE rollout status deployment/seat-service --timeout=300s
+          kubectl -n $K8S_NAMESPACE rollout status deployment/payment-service --timeout=300s
+          kubectl -n $K8S_NAMESPACE rollout status deployment/ticket-service --timeout=300s
