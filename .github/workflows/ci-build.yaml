@@ -75,8 +75,9 @@ jobs:
 
       - name: Deploy Latest Images To EKS
         env:
-            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            IMAGE_TAG: ${{ github.sha }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: latest
+          K8S_NAMESPACE: ticketing
         run: |
           kubectl -n $K8S_NAMESPACE set image deployment/booking-service booking-service=$ECR_REGISTRY/booking-service:$IMAGE_TAG       
           kubectl -n $K8S_NAMESPACE set image deployment/seat-service seat-service=$ECR_REGISTRY/seat-service:$IMAGE_TAG
