@@ -27,7 +27,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: eu-west-3
         
         # Login to ECR
       - name: Login to Amazon ECR
@@ -70,7 +70,7 @@ jobs:
       - name: Update kubeconfig for EKS
         run: |
           aws eks update-kubeconfig \
-            --region $AWS_REGION \
+            --region eu-west-3 \
             --name ticketing-cluster
 
       - name: Deploy Latest Images To EKS
