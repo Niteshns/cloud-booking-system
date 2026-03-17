@@ -82,13 +82,6 @@ jobs:
             --region eu-west-3 \
             --name ticketing-cluster
 
-        # Apply K8s manifests (HPAs, services, configmaps, etc.)
-      - name: Apply Kubernetes Manifests
-        env:
-          K8S_NAMESPACE: ticketing
-        run: |
-          kubectl apply -f k8s/ -n $K8S_NAMESPACE
-
         # Deploy the new images to EKS
       - name: Deploy Latest Images To EKS
         env:
