@@ -27,7 +27,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-3
+          aws-region: ${{ env.AWS_REGION }}
         
         # Login to ECR
       - name: Login to Amazon ECR
@@ -70,9 +70,20 @@ jobs:
       - name: Update kubeconfig for EKS
         run: |
           aws eks update-kubeconfig \
-            --region eu-west-3 \
+            --region $AWS_REGION \
             --name ticketing-cluster
 
-      - name: Deploy to Kubernetes
+      - name: Deploy Latest Images To EKS
+        env:
+            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            IMAGE_TAG: ${{ github.sha }}
         run: |
-          kubectl apply -k k8s/
+          kubectl -n $K8S_NAMESPACE set image deployment/booking-service booking-service=$ECR_REGISTRY/booking-service:$IMAGE_TAG       
+          kubectl -n $K8S_NAMESPACE set image deployment/seat-service seat-service=$ECR_REGISTRY/seat-service:$IMAGE_TAG
+          kubectl -n $K8S_NAMESPACE set image deployment/payment-service payment-service=$ECR_REGISTRY/payment-service:$IMAGE_TAG
+          kubectl -n $K8S_NAMESPACE set image deployment/ticket-service ticket-service=$ECR_REGISTRY/ticket-service:$IMAGE_TAG
+
+          kubectl -n $K8S_NAMESPACE rollout status deployment/booking-service --timeout=180s
+          kubectl -n $K8S_NAMESPACE rollout status deployment/seat-service --timeout=180s
+          kubectl -n $K8S_NAMESPACE rollout status deployment/payment-service --timeout=180s
+          kubectl -n $K8S_NAMESPACE rollout status deployment/ticket-service --timeout=180s
