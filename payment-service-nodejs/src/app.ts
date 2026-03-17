@@ -51,10 +51,10 @@ async function startPaymentWorker() {
       const paymentConfirmationId = uuidv4();
 
       try {
-        const userId = 333;
-        const eventId = 212;
-        const price = 199;
-        const paymentOption = "debit-card";
+        const userId = 414;
+        const eventId = 620;
+        const price = 129;
+        const paymentOption = "credit-card";
 
         await databasePool.execute(
           `
