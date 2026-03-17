@@ -38,31 +38,41 @@ jobs:
       - name: Build and Push Java Booking Service
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           cd booking-service-java
           # Compile the fresh code first!
           mvn clean package -DskipTests
           # Build and push the image
-          docker build -t $ECR_REGISTRY/booking-service:latest .
+          docker build -t $ECR_REGISTRY/booking-service:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/booking-service:$IMAGE_TAG $ECR_REGISTRY/booking-service:latest
+          docker push $ECR_REGISTRY/booking-service:$IMAGE_TAG
           docker push $ECR_REGISTRY/booking-service:latest
         
         # Build and push the node microservices
       - name: Build and Push Microservices
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           cd seat-service-nodejs
-          docker build -t $ECR_REGISTRY/seat-service:latest .
+          docker build -t $ECR_REGISTRY/seat-service:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/seat-service:$IMAGE_TAG $ECR_REGISTRY/seat-service:latest
+          docker push $ECR_REGISTRY/seat-service:$IMAGE_TAG
           docker push $ECR_REGISTRY/seat-service:latest
           cd ..
 
           cd payment-service-nodejs
-          docker build -t $ECR_REGISTRY/payment-service:latest .
+          docker build -t $ECR_REGISTRY/payment-service:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/payment-service:$IMAGE_TAG $ECR_REGISTRY/payment-service:latest
+          docker push $ECR_REGISTRY/payment-service:$IMAGE_TAG
           docker push $ECR_REGISTRY/payment-service:latest
           cd ..
 
           cd ticket-service-nodejs
-          docker build -t $ECR_REGISTRY/ticket-service:latest .
+          docker build -t $ECR_REGISTRY/ticket-service:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/ticket-service:$IMAGE_TAG $ECR_REGISTRY/ticket-service:latest
+          docker push $ECR_REGISTRY/ticket-service:$IMAGE_TAG
           docker push $ECR_REGISTRY/ticket-service:latest
 
 
@@ -76,7 +86,7 @@ jobs:
       - name: Deploy Latest Images To EKS
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: latest
+          IMAGE_TAG: ${{ github.sha }}
           K8S_NAMESPACE: ticketing
         run: |
           kubectl -n $K8S_NAMESPACE set image deployment/booking-service booking-service=$ECR_REGISTRY/booking-service:$IMAGE_TAG       

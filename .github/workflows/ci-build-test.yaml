@@ -35,18 +35,18 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       
         # Update the new code changes by applying it on the kubernetes  
-      - name: Update kubeconfig for EKS
-        run: |
-          aws eks update-kubeconfig \
-            --region eu-west-3 \
-            --name ticketing-cluster
+      # - name: Update kubeconfig for EKS
+      #   run: |
+      #     aws eks update-kubeconfig \
+      #       --region eu-west-3 \
+      #       --name ticketing-cluster
 
-      - name: Debug EKS auth
-        run: |
-          aws sts get-caller-identity
-          kubectl config current-context
-          kubectl get nodes
+      # - name: Debug EKS auth
+      #   run: |
+      #     aws sts get-caller-identity
+      #     kubectl config current-context
+      #     kubectl get nodes
 
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl apply -k k8s/
+      # - name: Deploy to Kubernetes
+      #   run: |
+      #     kubectl apply -k k8s/
