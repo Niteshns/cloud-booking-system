@@ -1,41 +1,80 @@
-# DevOpsUvA
+# DevOpsUvA Ticket Booking on Camunda 8
 
 ## Overview
 
-This is a ticket booking system running on AWS. A user sends a REST request to the Booking Service, which triggers a workflow in Zeebe (Camunda). Zeebe then drives three microservices in order: Seat Reservation, Payment, and Ticket Generation. Each microservice is independent and has its own dedicated database.
+This repository contains a ticket-booking demo running on AWS with Camunda 8 (Zeebe) orchestration.
 
-## CI/CD Pipeline
+Flow summary:
 
-All code is stored on GitHub. When a developer pushes, GitHub Actions automatically builds the Docker images, runs the tests, and pushes the images to Amazon ECR (Elastic Container Registry). The microservices running inside the EKS cluster pull their images directly from ECR.
+1. A client calls the Booking Service REST API.
+2. The Booking Service starts the ticket-booking BPMN process in Zeebe.
+3. Zeebe coordinates three steps: seat reservation, payment retrieval, and ticket generation.
+4. The Booking Service exposes booking status until the process completes.
 
-## AWS Infrastructure
+## Components
 
-All services run inside an Amazon EKS cluster. EKS is a managed Kubernetes service, meaning AWS handles the control plane and the team only manages the workloads. Each microservice runs on its own EC2 node within the cluster.
+- booking-service-java: Java Spring Boot service that starts process instances and serves booking status.
+- seat-service-nodejs: Zeebe worker for reserve-seats jobs.
+- payment-service-nodejs: RabbitMQ consumer for payment requests and publisher for payment responses.
+- ticket-service-nodejs: REST service used by the booking flow to generate a ticket.
+- k8s: Kubernetes manifests for namespace, deployments, services, and HPAs.
 
-## Booking Service
+## Runtime Architecture
 
-The Booking Service is built with Java Spring Boot. It is the entry point for all user requests. It receives the booking request over REST and uses gRPC to start a workflow instance in Zeebe.
+- Platform: Amazon EKS (Kubernetes).
+- Images: Amazon ECR.
+- Messaging and orchestration:
+	- Zeebe jobs for reserve-seats and retrieve-payment command handling.
+	- RabbitMQ queues paymentRequest and paymentResponse for payment handoff.
+	- REST call to the ticket-service /ticket endpoint for ticket generation.
+- Databases: each Node.js microservice writes to its own MySQL-compatible Amazon RDS instance.
 
-## Zeebe (Camunda 8)
+Note: workloads run as Kubernetes pods. They are not pinned to one EC2 node per microservice.
 
-Zeebe is the workflow engine that orchestrates the entire booking process. It manages the state of every booking, drives each step in order, and handles retries when something fails. The booking process has three steps:
+## CI and CD
 
-1. Zeebe publishes the seat reservation job over gRPC. The Seat Reservation service picks it up, reserves the seat, and reports completion back to Zeebe.
+GitHub Actions workflow in .github/workflows/ci-build.yaml does the following on push to main:
 
-2. Zeebe publishes the payment job over AMQP. The Payment service picks it up, processes the payment, and reports completion back to Zeebe.
+1. Builds booking-service-java with Maven package step.
+2. Builds and pushes Docker images for all four services to ECR.
+3. Tags images with both commit SHA and latest.
+4. Applies Kubernetes manifests (HPAs, services, configmaps) from the k8s directory.
+5. Updates image tags in EKS deployments using kubectl set image.
+6. Waits for rollout completion for each deployment.
 
-3. Zeebe publishes the ticket generation job over REST. The Ticket Generation service picks it up, generates the ticket, and reports completion back to Zeebe.
+Important: current workflow skips tests for booking-service-java and does not run test stages for Node.js services.
 
-Once all three steps are done, Zeebe marks the process as finished and the Booking Service returns the result to the user.
+## Autoscaling
 
-## Microservices
+Each microservice has a HorizontalPodAutoscaler defined in the k8s directory. The HPAs scale based on average CPU utilization with a target of 65%. Minimum replicas is set to 1 and maximum to 5 for all services. This keeps pods available under load while staying within the capacity of the EKS cluster, which runs 2 nodes by default and can scale up to 5.
 
-**Seat Reservation** runs on EC2. It uses Amazon ElastiCache (Redis) as a cache and Amazon RDS as the persistent database for seat data.
-
-**Payment** runs on EC2. It uses Amazon RDS (Postgres) to store payment records. Postgres is used because payment data is relational and transactional.
-
-**Ticket Generation** runs on EC2. It uses Amazon RDS (Postgres) to store generated tickets.
+The HPA manifests are applied as part of the CI/CD pipeline alongside other Kubernetes resources, so any changes to scaling limits are picked up automatically on the next push to main.
 
 ## Monitoring
 
-Prometheus scrapes metrics from all services and is where alerting rules are defined. When an alert fires, Alertmanager routes the notification to Slack or Email. Grafana connects to Prometheus and provides dashboards for visualising the health of the system.
+Observability is handled through Amazon CloudWatch Container Insights, which collects metrics from the EKS cluster and the RDS instances.
+
+A custom CloudWatch dashboard (ticketMonitoring) tracks the following:
+
+- CPU and memory usage per service (booking, seat, payment, ticket).
+- Request count and latency across the services.
+- Number of running pods per service, which reflects HPA scaling activity.
+- RDS read/write latency and IOPS for the payment and ticket-generation databases.
+- Application error rate.
+
+The dashboard also surfaces application logs from the /aws/containerinsights/ticketing-cluster/application log group, which aggregates stdout from all pods in the ticketing namespace. This is useful for spotting startup failures, Zeebe connection issues, or RabbitMQ errors without having to kubectl into the cluster.
+
+CloudWatch alarms are configured for CPU and memory usage on each service (e.g. Booking-service-cpu-alert, Seat-service-memory-alert) as well as a latency alarm. These fire when resource usage or response times exceed defined thresholds.
+
+## Kubernetes Manifests
+
+Core manifests are in k8s:
+
+- namespace.yaml
+- rabbitmq-deployment.yaml
+- booking-deployment.yaml and booking-service.yaml
+- seat-deployment.yaml and seat-service.yaml
+- payment-deployment.yaml and payment-service.yaml
+- ticket-deployment.yaml and ticket-service.yaml
+- booking-hpa.yaml, seat-hpa.yaml, payment-hpa.yaml, ticket-hpa.yaml
+- kustomization.yaml to apply the full stack
