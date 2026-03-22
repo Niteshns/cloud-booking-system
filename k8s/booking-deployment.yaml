@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking-service
+  namespace: ticketing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-service
+  template:
+    metadata:
+      labels:
+        app: booking-service
+    spec:
+      containers:
+        - name: booking-service
+          image: 409165006231.dkr.ecr.eu-west-3.amazonaws.com/booking-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: TICKET_SERVICE_ENDPOINT
+              value: http://ticket-service:3000/ticket
+            - name: ZEEBE_CLIENT_CLOUD_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-credentials
+                  key: zeebeClientCloudRegion
+            - name: ZEEBE_CLIENT_CLOUD_CLUSTERID
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-credentials
+                  key: zeebeClientCloudClusterId
+            - name: ZEEBE_CLIENT_CLOUD_CLIENTID
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-credentials
+                  key: zeebeClientCloudClientId
+            - name: ZEEBE_CLIENT_CLOUD_CLIENTSECRET
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-credentials
+                  key: zeebeClientCloudClientSecret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
