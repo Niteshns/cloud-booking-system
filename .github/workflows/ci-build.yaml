@@ -82,6 +82,19 @@ jobs:
             --region eu-west-3 \
             --name ticketing-cluster
 
+        # Create or update the Camunda credentials secret
+      - name: Apply Camunda Credentials Secret
+        env:
+          K8S_NAMESPACE: ticketing
+        run: |
+          kubectl -n $K8S_NAMESPACE create secret generic camunda-credentials \
+            --from-literal=zeebeClientCloudClusterId=${{ secrets.ZEEBE_CLUSTER_ID }} \
+            --from-literal=zeebeClientCloudClientId=${{ secrets.ZEEBE_CLIENT_ID }} \
+            --from-literal=zeebeClientCloudClientSecret=${{ secrets.ZEEBE_CLIENT_SECRET }} \
+            --from-literal=zeebeClientCloudRegion=${{ secrets.ZEEBE_REGION }} \
+            --from-literal=zeebeAddress=${{ secrets.ZEEBE_ADDRESS }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
         # Deploy the new images to EKS
       - name: Deploy Latest Images To EKS
         env:

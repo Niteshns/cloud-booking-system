@@ -28,12 +28,24 @@ spec:
         - name: SPRING_RABBITMQ_HOST
           value: "rabbitmq-service"
         - name: ZEEBE_CLIENT_CLOUD_CLUSTERID
-          value: 7bc2c2fe-3cf9-4950-9df3-86f75b0b64c4
+          valueFrom:
+            secretKeyRef:
+              name: camunda-credentials
+              key: zeebeClientCloudClusterId
         - name: ZEEBE_CLIENT_CLOUD_CLIENTID
-          value: WSF9GRDRr.hs45KJ~Tp8M7N_.XC7KoAU
+          valueFrom:
+            secretKeyRef:
+              name: camunda-credentials
+              key: zeebeClientCloudClientId
         - name: ZEEBE_CLIENT_CLOUD_CLIENTSECRET
-          value: PkLQmENeEeQ~ogi_~spFTn86RmYxCzuHVPVlxCi4wj.Q1V0MBbiL0aTPOygbfoiU
+          valueFrom:
+            secretKeyRef:
+              name: camunda-credentials
+              key: zeebeClientCloudClientSecret
         - name: ZEEBE_CLIENT_CLOUD_REGION
-          value: cdg-1
+          valueFrom:
+            secretKeyRef:
+              name: camunda-credentials
+              key: zeebeClientCloudRegion
         - name: TICKET_SERVICE_ENDPOINT
           value: "http://ticket-service:3003/ticket"

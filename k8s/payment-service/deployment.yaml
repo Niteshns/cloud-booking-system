@@ -30,10 +30,19 @@ spec:
         - name: RABBITMQ_URL
           value: "amqp://guest:guest@rabbitmq-service:5672"
         - name: ZEEBE_CLIENT_ID
-          value: WSF9GRDRr.hs45KJ~Tp8M7N_.XC7KoAU
+          valueFrom:
+            secretKeyRef:
+              name: camunda-credentials
+              key: zeebeClientCloudClientId
         - name: ZEEBE_CLIENT_SECRET
-          value: "PkLQmENeEeQ~ogi_~spFTn86RmYxCzuHVPVlxCi4wj.Q1V0MBbiL0aTPOygbfoiU"
+          valueFrom:
+            secretKeyRef:
+              name: camunda-credentials
+              key: zeebeClientCloudClientSecret
         - name: ZEEBE_ADDRESS
-          value: "7bc2c2fe-3cf9-4950-9df3-86f75b0b64c4.cdg-1.zeebe.camunda.io:443"
+          valueFrom:
+            secretKeyRef:
+              name: camunda-credentials
+              key: zeebeAddress
         - name: ZEEBE_AUTHORIZATION_SERVER_URL
           value: "https://login.cloud.camunda.io/oauth/token"
